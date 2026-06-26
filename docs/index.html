@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Risk Under Climate Stress — Harvard Capstone</title>
+  <meta name="description" content="A Harvard capstone quantifying how Florida extreme weather and macroeconomic forces shape mortgage delinquency risk (2008–2023)." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <div class="brand">
+        <div class="shield">VE</div>
+        <div class="brand__txt"><b>Harvard University</b> · Capstone 2024</div>
+      </div>
+      <nav class="nav">
+        <a href="#timeline">Delinquency</a>
+        <a href="#climate">Climate</a>
+        <a href="#drivers">Drivers</a>
+        <a href="#models">Models</a>
+        <a href="#findings">Findings</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <canvas class="hero__chart" id="heroChart"></canvas>
+    <div class="wrap hero__inner">
+      <span class="eyebrow">Capstone · Climate &amp; Credit Risk</span>
+      <h1>Mortgage Risk Under <em>Climate Stress</em></h1>
+      <p class="hero__sub">Integrating PNC Bank mortgage performance, macroeconomic indicators, and Florida
+        weather &amp; disaster records to quantify how extreme weather shapes default risk — and to bring
+        that signal into underwriting.</p>
+      <div class="hero__meta">
+        <span><b>Authors</b> &nbsp;Yao Zhang · Maggie Chen · Vincent Stone · Ming Xia</span>
+        <span><b>Institution</b> &nbsp;Harvard University</span>
+        <span><b>Date</b> &nbsp;July 2024</span>
+      </div>
+      <div class="hero__rule"></div>
+    </div>
+  </section>
+
+  <!-- Stat band -->
+  <section class="stats">
+    <div class="wrap stats__grid">
+      <div class="stat"><div class="stat__num"><span data-count="192" data-dec="0">0</span></div><div class="stat__lab">Months analyzed · 2008–2023</div></div>
+      <div class="stat"><div class="stat__num"><span data-count="10.5" data-dec="1">0</span><span class="u">%</span></div><div class="stat__lab">Peak 60+ delinquency · Dec 2009</div></div>
+      <div class="stat"><div class="stat__num"><span data-count="53" data-dec="0">0</span></div><div class="stat__lab">Disaster months flagged</div></div>
+      <div class="stat"><div class="stat__num">#1<span class="u">.</span></div><div class="stat__lab">SHAP feature · Disaster Presence</div></div>
+    </div>
+  </section>
+
+  <!-- Timeline -->
+  <section class="block" id="timeline">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">01 — The series</span>
+        <h2>Sixteen years of Florida delinquency</h2>
+        <p>Monthly 60+ day delinquency on Florida mortgages. Shaded bands mark months with a recorded
+          natural disaster. The defining shock is macroeconomic — the 2008–09 financial crisis — peaking
+          at 10.5% in December 2009.</p>
+      </div>
+      <div class="panel reveal">
+        <div class="panel__title"><h3>FL 60+ Day Delinquency Rate</h3><span class="hint">monthly · % of portfolio</span></div>
+        <div class="toggles">
+          <button class="toggle on" data-tl="0">Delinquency</button>
+          <button class="toggle t2" data-tl="1">Origination DTI</button>
+          <span class="toggle" style="cursor:default;border-style:dashed">▦ shaded = disaster month</span>
+        </div>
+        <div class="chart-box tall"><canvas id="dqChart"></canvas></div>
+        <div class="note">Disaster months are shaded but do not, on their own, sit at the peaks — raw
+          co-movement is weak. Isolating the climate signal requires controlling for macro and loan factors
+          (see <a href="#drivers">Drivers</a>).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Climate overlay -->
+  <section class="block" id="climate">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">02 — Co-movement</span>
+        <h2>Does the weather move with risk?</h2>
+        <p>Delinquency, temperature, and precipitation, each rescaled to 0–1 so their shapes can be compared
+          on one axis. Seasonality is strong in weather, muted in credit — a first hint that the climate
+          effect is conditional, not direct.</p>
+      </div>
+      <div class="panel reveal">
+        <div class="panel__title"><h3>Normalized overlay</h3><span class="hint">min–max scaled · 0–1</span></div>
+        <div class="toggles">
+          <button class="toggle on" data-cl="0">Delinquency</button>
+          <button class="toggle t2 on" data-cl="1">Temperature</button>
+          <button class="toggle t3" data-cl="2">Precipitation</button>
+        </div>
+        <div class="chart-box"><canvas id="climateChart"></canvas></div>
+        <div class="note">Univariate correlations are weak (delinquency vs temperature ≈ −0.13). The
+          relationship only sharpens once weather is combined with loan and macro covariates in a model.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Drivers / SHAP -->
+  <section class="block" id="drivers">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">03 — What the model learns</span>
+        <h2>Disaster presence is the top driver</h2>
+      </div>
+      <div class="cols">
+        <div class="reveal">
+          <p style="font-size:1.12rem;color:var(--ink-soft);margin-top:0">When every feature is allowed to
+            interact inside the trained model, the <b style="color:var(--ink)">Disaster Presence Indicator
+            ranks first</b> by SHAP value — above escrow burden, unemployment, the yield-curve spread, and
+            mortgage rates.</p>
+          <p style="color:var(--ink-soft)">This is the study's pivotal result: a variable with a <em>weak
+            raw correlation</em> becomes the <em>most influential predictor</em> once macro and loan context
+            is held constant. Climate risk is real but <b style="color:var(--ink)">conditional</b> — invisible
+            to simple averages, decisive in a properly specified model.</p>
+          <div class="note">SHAP = SHapley Additive exPlanations — a game-theoretic attribution of each
+            feature's contribution to individual predictions.</div>
+        </div>
+        <figure class="figure reveal">
+          <img src="assets/figures/fig_00.png" alt="SHAP feature importance summary plot" loading="lazy" />
+          <figcaption><b>Feature importance (SHAP).</b> Each point is a month; horizontal spread shows impact
+            on predicted delinquency. Disaster Presence sits at the top of the ranking.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Models -->
+  <section class="block" id="models">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">04 — Methodology</span>
+        <h2>Three lenses on the same risk</h2>
+        <p>Rather than trust one model, the study triangulates with survival analysis, interpretable additive
+          models, and Bayesian simulation.</p>
+      </div>
+      <div class="method-grid reveal">
+        <div class="method"><div class="method__no">01</div><h4>Cox Proportional Hazards</h4>
+          <p>An additive survival model for time-to-default, letting weather and macro covariates shift the
+            hazard of a loan becoming delinquent.</p></div>
+        <div class="method"><div class="method__no">02</div><h4>Generalized Additive Models</h4>
+          <p>Logistic GAMs capture non-linear, interpretable effects of each driver on delinquency
+            probability — partial effects you can actually read.</p></div>
+        <div class="method"><div class="method__no">03</div><h4>Bayesian &amp; Monte Carlo</h4>
+          <p>MCMC simulation propagates uncertainty through stress scenarios, producing portfolio outcome
+            distributions rather than single point estimates.</p></div>
+      </div>
+      <div class="gallery">
+        <figure class="figure reveal">
+          <img src="assets/figures/fig_01.png" alt="Monte Carlo scenario population distributions" loading="lazy" />
+          <figcaption><b>Monte Carlo stress scenarios.</b> Simulated portfolio outcome distributions across
+            combined risk states — the Bayesian view of tail exposure.</figcaption>
+        </figure>
+        <figure class="figure reveal">
+          <img src="assets/figures/fig_02.png" alt="Autocorrelation diagnostic plot" loading="lazy" />
+          <figcaption><b>Time-series diagnostics.</b> Autocorrelation of monthly temperature confirms the
+            strong seasonal structure the models must account for.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Findings -->
+  <section class="block" id="findings">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow">05 — So what</span>
+        <h2>Implications for underwriting</h2>
+      </div>
+      <div class="finds reveal">
+        <div class="find"><div class="find__k">A</div><div><h4>Price the conditional signal</h4>
+          <p>Disaster exposure matters most in combination with macro stress — flag the interaction, not the
+            weather alone.</p></div></div>
+        <div class="find"><div class="find__k">B</div><div><h4>Region-specific calibration</h4>
+          <p>The Florida-only design isolates a coherent hazard regime; the same pipeline can be re-fit per
+            climate region.</p></div></div>
+        <div class="find"><div class="find__k">C</div><div><h4>Model the distribution</h4>
+          <p>Bayesian scenarios expose tail risk that point estimates hide — essential for capital and
+            reserve planning.</p></div></div>
+        <div class="find"><div class="find__k">D</div><div><h4>Toward consumer-level scoring</h4>
+          <p>The framework extends from portfolio aggregates to loan-level climate-aware risk scores.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="foot">
+    <div class="wrap foot__grid">
+      <div>
+        <h3>Mortgage Risk Under Climate Stress</h3>
+        <p class="foot__authors">Harvard University capstone · July 2024<br/>
+          Yao Zhang · Maggie Chen · Vincent Stone · Ming Xia</p>
+      </div>
+      <div class="foot__links">
+        <a href="https://github.com/SuperGokou/Mortgage-Risk-Assessment-with-Climate-Considerations" target="_blank" rel="noopener">⎇ Source &amp; notebooks</a>
+        <a href="finalreport.pdf" target="_blank" rel="noopener">▣ Full report (PDF)</a>
+        <a href="https://github.com/SuperGokou" target="_blank" rel="noopener">↩ Portfolio</a>
+      </div>
+    </div>
+    <div class="wrap foot__fine">Data: PNC Bank mortgage performance · macroeconomic indicators · NOAA-style
+      weather &amp; disaster records · Florida, 2008–2023. Dashboard built from the project's cleaned datasets
+      and model outputs.</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
